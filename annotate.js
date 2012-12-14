@@ -2,7 +2,7 @@
 Javascript plugin to allow annotations on any page.
 
 - Works on IE9+, Chrome, Firefox, iPad. Zepto / jQuery required
-- Click the annotator to start drawing: arrow or text
+- Click the annotator to start drawing: line, rect or text
 
 To use it, add this line to the end of the HTML template:
 
@@ -35,8 +35,11 @@ svg.overlay { display: none; }
 html.drawing svg.overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.1); }
 html.drawing svg.overlay * { cursor: auto; }
 html.drawing svg.overlay line { stroke: rgba(0,0,0,.8); }
+html.drawing svg.overlay rect { fill: rgba(0,0,0,.2); }
 html.drawing svg.overlay .editing,
-html.drawing svg.overlay line:hover { stroke: red; stroke-width: 2; }
+html.drawing svg.overlay line:hover,
+html.drawing svg.overlay rect:hover { stroke: red; stroke-width: 2; }
+
 html.drawing svg.overlay textarea { resize: none; background-color: #ffa; border:1px solid #fea; font-family: Georgia, serif; }
 <<< style.css
 
@@ -122,49 +125,49 @@ function init(files) {
         .css('height', Math.max($(document).height(), 2000))
         .appendTo('body');
 
-    // Class used to draw Arrows
-    var Arrow = {
-        // On Click, we want to start / stop drawing / editing an arrow
+    // Class used to draw Lines
+    var Line = {
+        // On Click, we want to start / stop drawing / editing a line
         onEdit: function(e) {
-            // If we are NOT already editing an arrow,
-            if (!Arrow.editing) {
+            // If we are NOT already editing a line,
+            if (!Line.editing) {
                 var x = e.pageX,
                     y = e.pageY;
 
-                // Create a new arrow if we didn't click on one.
-                // Else, use the existing arrow.
+                // Create a new line if we didn't click on one.
+                // Else, use the existing line.
                 if ($(e.target).is('line')) {
-                    Arrow.editingLine = $(e.target);
+                    Line.editingObj = $(e.target);
                 } else {
-                    Arrow.editingLine = $$('line', {
+                    Line.editingObj = $$('line', {
                         'x1': x,
                         'y1': y,
                         'x2': x,
                         'y2': y
                     });
-                    overlay.append(Arrow.editingLine);
+                    overlay.append(Line.editingObj);
                 }
 
                 // Make a note that we're editing. `editing` has the
                 // node we're editing: 1 for (x1,y1), 2 for (x2,y2).
                 // If equidistant, use 2 (helps when we start drawing)
-                var line = Arrow.editingLine;
+                var line = Line.editingObj;
                 var dx1 = x - line.attr('x1'),
                     dy1 = y - line.attr('y1'),
                     dx2 = x - line.attr('x2'),
                     dy2 = y - line.attr('y2');
-                Arrow.editing = dx1*dx1 + dy1*dy1 < dx2*dx2 + dy2*dy2 ? 1 : 2;
+                Line.editing = dx1*dx1 + dy1*dy1 < dx2*dx2 + dy2*dy2 ? 1 : 2;
 
                 // Set the class stating that we're editing, and bind events
                 line.attr('class', 'editing');
-                $('html').on('mousemove', Arrow.onMoveWhenEditing)
-                         .on('keyup', Arrow.onKeyWhenEditing);
+                $('html').on('mousemove', Line.onMoveWhenEditing)
+                         .on('keyup', Line.onKeyWhenEditing);
             } else {
                 // To end editing, unbind events, and reset stuff
-                $('html').off('mousemove', Arrow.onMoveWhenEditing)
-                         .off('keyup', Arrow.onKeyWhenEditing);
-                Arrow.editing = 0;
-                Arrow.editingLine.removeAttr('class');
+                $('html').off('mousemove', Line.onMoveWhenEditing)
+                         .off('keyup', Line.onKeyWhenEditing);
+                Line.editing = 0;
+                Line.editingObj.removeAttr('class');
             }
 
             // We don't want this to go to anything behind the line or overlay.
@@ -174,16 +177,64 @@ function init(files) {
         // Just move the appropriate end of the line as we move the mouse.
         onMoveWhenEditing: function(e) {
             var attrs = {};
-            attrs['x' + Arrow.editing] = e.pageX;
-            attrs['y' + Arrow.editing] = e.pageY;
-            $(Arrow.editingLine).attr(attrs);
+            attrs['x' + Line.editing] = e.pageX;
+            attrs['y' + Line.editing] = e.pageY;
+            $(Line.editingObj).attr(attrs);
         },
 
         onKeyWhenEditing: function(e) {
             // Del, Esc remove the current line
             if ((e.keyCode == 46) || (e.keyCode == 27)) {
-                Arrow.editingLine.trigger('click').remove();
+                Line.editingObj.trigger('click').remove();
             }
+        }
+    };
+
+    // Class used to draw Lines
+    var Rect = {
+        onEdit: function(e) {
+            if (!Rect.editing) {
+                var x = e.pageX,
+                    y = e.pageY;
+
+                // Create a new rect if we didn't click on one.
+                // Else, use the existing line.
+                if ($(e.target).is('line')) {
+                    Rect.editingObj = $(e.target);
+                } else {
+                    Rect.editingObj = $$('rect', {
+                        'x': x,
+                        'y': y,
+                        'width': 0,
+                        'height': 0
+                    });
+                    overlay.append(Rect.editingObj);
+                }
+
+                Rect.editing = 1;
+
+                // Set the class stating that we're editing, and bind events
+                Rect.editingObj.attr('class', 'editing');
+                $('html').on('mousemove', Rect.onMoveWhenEditing)
+                         .on('keyup', Rect.onKeyWhenEditing);
+            } else {
+                // To end editing, unbind events, and reset stuff
+                $('html').off('mousemove', Rect.onMoveWhenEditing)
+                         .off('keyup', Rect.onKeyWhenEditing);
+                Rect.editing = 0;
+                Rect.editingObj.removeAttr('class');
+            }
+
+            // We don't want this to go to anything behind the line or overlay.
+            e.stopPropagation();
+        },
+
+        // Just move the appropriate end of the line as we move the mouse.
+        onMoveWhenEditing: function(e) {
+            var attrs = {};
+            attrs['width']  = Math.max(0, e.pageX - Rect.editingObj.attr('x'));
+            attrs['height'] = Math.max(0, e.pageY - Rect.editingObj.attr('y'));
+            $(Rect.editingObj).attr(attrs);
         }
     };
 
@@ -197,9 +248,9 @@ function init(files) {
 
                 // Create a new textbox if we didn't click on one.
                 if (overlay.is(e.target)) {
-                    Arrow.editingText = $$('foreignObject', {x:x, y:y, width:200, height:60})
+                    Text.editingText = $$('foreignObject', {x:x, y:y, width:200, height:60})
                         .append($('<textarea>').css({width:'200px', height:'60px'}));
-                    overlay.append(Arrow.editingText);
+                    overlay.append(Text.editingText);
                 }
             }
         }
@@ -207,12 +258,17 @@ function init(files) {
 
     $('a.line', menu).on('click', function(e) {
         overlay.off('click');
-        overlay.on('click', Arrow.onEdit);
+        overlay.on('click', Line.onEdit);
     });
 
     $('a.text', menu).on('click', function(e) {
         overlay.off('click');
         overlay.on('click', Text.onEdit);
+    });
+
+    $('a.rect', menu).on('click', function(e) {
+        overlay.off('click');
+        overlay.on('click', Rect.onEdit);
     });
 }
 
