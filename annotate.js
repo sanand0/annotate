@@ -24,15 +24,6 @@ html.annogram .menu {
     z-index: 99999;
 }
 
-.gramener-menubox {
-    position: fixed;
-    width: 36px;
-    height: 36px;
-    right: 5px;
-    top: 5px;
-    z-index: 9999;
-}
-
 html.annogram svg.overlay {
     position: absolute;
     width: 100%;
@@ -40,12 +31,12 @@ html.annogram svg.overlay {
     left: 0;
 }
 
-html.drawing rect.menu { fill: url(#MenuPressed); cursor: auto; }
 svg.overlay { display: none; }
 html.drawing svg.overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.1); }
 html.drawing svg.overlay * { cursor: auto; }
 html.drawing svg.overlay line { stroke: rgba(0,0,0,.8); }
-html.drawing svg.overlay .editing, html.drawing svg.overlay line:hover { stroke: red; stroke-width: 2; }
+html.drawing svg.overlay .editing,
+html.drawing svg.overlay line:hover { stroke: red; stroke-width: 2; }
 html.drawing svg.overlay textarea { resize: none; background-color: #ffa; border:1px solid #fea; font-family: Georgia, serif; }
 <<< style.css
 
