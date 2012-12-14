@@ -51,7 +51,7 @@ html.drawing svg.overlay textarea { resize: none; background-color: #ffa; border
 
 >>> menu.html
 <div class="menu">
- <a href="#" class="shape btn btn-danger btn-small">Del</a> 
+ <a href="#" class="shape btn btn-danger btn-small">Del</a>
  <span class="btn-group">
   <a href="#" class="shape text btn btn-primary btn-small">Text</a>
   <a href="#" class="shape rect btn btn-primary btn-small">Rect</a>
@@ -113,6 +113,10 @@ function init(files) {
         $('a.shape', menu).toggle();
         e.preventDefault();
         $('html').toggleClass('drawing');
+        // When we start drawing, click on the last shape
+        if ($(this).is('.active')) {
+            $('a.shape', menu).last().trigger('click');
+        }
     });
 
     $('a.shape', menu).on('click', function(e) {
@@ -185,8 +189,8 @@ function init(files) {
         },
 
         onKeyWhenEditing: function(e) {
-            // Delete removes the current line
-            if (e.keyCode == 46) {
+            // Del, Esc remove the current line
+            if ((e.keyCode == 46) || (e.keyCode == 27)) {
                 Arrow.editingLine.trigger('click').remove();
             }
         }
