@@ -25,28 +25,30 @@ html.annogram .menu {
     z-index: 99999;
 }
 
-html.annogram svg.overlay {
+html.annogram .overlay {
     position: absolute;
     width: 100%;
     top: 0;
     left: 0;
+    display: none;
 }
 
-svg.overlay { display: none; }
-html.drawing svg.overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
-html.drawing svg.overlay * { cursor: auto; }
-html.drawing svg.overlay line { stroke: rgba(0,0,0,.8); stroke-width: 3; }
-html.drawing svg.overlay rect { fill: rgba(0,0,0,.2); }
-html.drawing svg.overlay line:hover,
-html.drawing svg.overlay rect:hover { stroke: red; stroke-width: 4; }
-
-html.drawing svg.overlay textarea { resize: none; background-color: #ffa; border:1px solid #fea; font-family: Georgia, serif; }
+html.drawing .overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
+html.drawing div.overlay { pointer-events: none; }
+html.drawing div.overlay textarea { pointer-events: auto; }
+html.drawing .overlay * { cursor: auto; }
+html.drawing .overlay line { stroke: rgba(0,0,0,.8); stroke-width: 3; }
+html.drawing .overlay rect { fill: rgba(0,0,0,.01); stroke: #000; }
+html.drawing .overlay textarea { background-color: #ffa; border:1px solid #fea; position: absolute; }
+html.drawing .overlay line:hover,
+html.drawing .overlay rect:hover { stroke: red; stroke-width: 4; }
+html.drawing .overlay textarea:hover { border: 4px solid red; }
 <<< style.css
 
 >>> menu.html
 <div class="menu">
  <span class="btn-group">
-  <!-- a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a -->
+  <a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a>
   <a href="#" data-plugin="Rect" class="shape btn btn-primary btn-small">Rect</a>
   <a href="#" data-plugin="Line" class="shape btn btn-primary btn-small">Line</a>
  </span>
@@ -111,7 +113,7 @@ function init(files) {
         }
     });
 
-    // Clicking on the
+    // Clicking on the menu makes the item active. That's all here.
     $('a.shape', menu).on('click', function(e) {
         e.preventDefault();
         $('a.shape', menu).removeClass('active');
@@ -119,9 +121,11 @@ function init(files) {
     });
 
     // Create the overlay. This is the parent of all the SVG elements we'll draw.
-    var overlay = $$('svg').attr('class', 'overlay')
+    var overlay = $$('svg').add('<div>').attr('class', 'overlay')
         .css('height', Math.max($(document).height(), 2000))
-        .appendTo('body');
+        .appendTo('body')
+        .filter('svg');
+    window.overlay = overlay;
 
     var onClick = function(e) {
         // If some other handler is already handling clicks, ignore.
@@ -195,6 +199,19 @@ Plugins.Line = {
                 $target.remove();
             }
         });
+    }
+};
+
+Plugins.Text = {
+    create: function(e, overlay) {
+        var obj = $('<textarea>').css({left: e.pageX, top: e.pageY});
+        obj.data('plugin', 'Text')
+            .appendTo(overlay.next())
+            .on('keyup', function(e) {
+                if (e.keyCode == 27) {
+                    obj.remove();
+                }
+            });
     }
 };
 
