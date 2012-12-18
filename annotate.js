@@ -121,11 +121,10 @@ function init(files) {
     });
 
     // Create the overlay. This is the parent of all the SVG elements we'll draw.
-    var overlay = $$('svg').add('<div>').attr('class', 'overlay')
+    var overlay = $$('svg').attr('class', 'overlay')
         .css('height', Math.max($(document).height(), 2000))
-        .appendTo('body')
-        .filter('svg');
-    window.overlay = overlay;
+        .appendTo('body');
+    $('<div class="overlay">').insertAfter(overlay);
 
     var onClick = function(e) {
         // If some other handler is already handling clicks, ignore.
