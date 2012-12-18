@@ -9,10 +9,11 @@ To use it, add this line to the end of the HTML template:
 1. Ensure that bootstrap.css is presnt
 2. Add <script class="annogram" src="annotate.js"></script>
 
-The class=annogram should not be changed.
+IMPORTANT:
+- The class=annogram should not be changed.
+- bootstrap.min.css should be part of the main page.
 
-Ensure that boo
-
+=============================================================================
 DO NOT REMOVE THESE FOLLOWING: THESE ARE NOT COMMENTS, THEY ARE INLINE FILES.
 These are extracted and used by the library
 
@@ -32,24 +33,22 @@ html.annogram svg.overlay {
 }
 
 svg.overlay { display: none; }
-html.drawing svg.overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.1); }
+html.drawing svg.overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
 html.drawing svg.overlay * { cursor: auto; }
-html.drawing svg.overlay line { stroke: rgba(0,0,0,.8); }
+html.drawing svg.overlay line { stroke: rgba(0,0,0,.8); stroke-width: 3; }
 html.drawing svg.overlay rect { fill: rgba(0,0,0,.2); }
-html.drawing svg.overlay .editing,
 html.drawing svg.overlay line:hover,
-html.drawing svg.overlay rect:hover { stroke: red; stroke-width: 2; }
+html.drawing svg.overlay rect:hover { stroke: red; stroke-width: 4; }
 
 html.drawing svg.overlay textarea { resize: none; background-color: #ffa; border:1px solid #fea; font-family: Georgia, serif; }
 <<< style.css
 
 >>> menu.html
 <div class="menu">
- <a href="#" class="shape btn btn-danger btn-small">Del</a>
  <span class="btn-group">
-  <a href="#" class="shape text btn btn-primary btn-small">Text</a>
-  <a href="#" class="shape rect btn btn-primary btn-small">Rect</a>
-  <a href="#" class="shape line btn btn-primary btn-small">Line</a>
+  <!-- a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a -->
+  <a href="#" data-plugin="Rect" class="shape btn btn-primary btn-small">Rect</a>
+  <a href="#" data-plugin="Line" class="shape btn btn-primary btn-small">Line</a>
  </span>
  <a href="#" class="draw btn btn-primary btn-small">Annotate</a>
 </div>
@@ -94,8 +93,7 @@ $.get($('script.annogram').attr('src'), function(text) {
 });
 
 // Annotation code starts here
-
-
+var Plugins = {};
 function init(files) {
     // Add styles
     $('<style>' + files['style.css'] + '</style>').appendTo('head');
@@ -113,163 +111,92 @@ function init(files) {
         }
     });
 
+    // Clicking on the
     $('a.shape', menu).on('click', function(e) {
         e.preventDefault();
         $('a.shape', menu).removeClass('active');
         $(this).addClass('active');
     });
 
-
     // Create the overlay. This is the parent of all the SVG elements we'll draw.
     var overlay = $$('svg').attr('class', 'overlay')
         .css('height', Math.max($(document).height(), 2000))
         .appendTo('body');
 
-    // Class used to draw Lines
-    var Line = {
-        // On Click, we want to start / stop drawing / editing a line
-        onEdit: function(e) {
-            // If we are NOT already editing a line,
-            if (!Line.editing) {
-                var x = e.pageX,
-                    y = e.pageY;
-
-                // Create a new line if we didn't click on one.
-                // Else, use the existing line.
-                if ($(e.target).is('line')) {
-                    Line.editingObj = $(e.target);
-                } else {
-                    Line.editingObj = $$('line', {
-                        'x1': x,
-                        'y1': y,
-                        'x2': x,
-                        'y2': y
-                    });
-                    overlay.append(Line.editingObj);
-                }
-
-                // Make a note that we're editing. `editing` has the
-                // node we're editing: 1 for (x1,y1), 2 for (x2,y2).
-                // If equidistant, use 2 (helps when we start drawing)
-                var line = Line.editingObj;
-                var dx1 = x - line.attr('x1'),
-                    dy1 = y - line.attr('y1'),
-                    dx2 = x - line.attr('x2'),
-                    dy2 = y - line.attr('y2');
-                Line.editing = dx1*dx1 + dy1*dy1 < dx2*dx2 + dy2*dy2 ? 1 : 2;
-
-                // Set the class stating that we're editing, and bind events
-                line.attr('class', 'editing');
-                $('html').on('mousemove', Line.onMoveWhenEditing)
-                         .on('keyup', Line.onKeyWhenEditing);
-            } else {
-                // To end editing, unbind events, and reset stuff
-                $('html').off('mousemove', Line.onMoveWhenEditing)
-                         .off('keyup', Line.onKeyWhenEditing);
-                Line.editing = 0;
-                Line.editingObj.removeAttr('class');
-            }
-
-            // We don't want this to go to anything behind the line or overlay.
-            e.stopPropagation();
-        },
-
-        // Just move the appropriate end of the line as we move the mouse.
-        onMoveWhenEditing: function(e) {
-            var attrs = {};
-            attrs['x' + Line.editing] = e.pageX;
-            attrs['y' + Line.editing] = e.pageY;
-            $(Line.editingObj).attr(attrs);
-        },
-
-        onKeyWhenEditing: function(e) {
-            // Del, Esc remove the current line
-            if ((e.keyCode == 46) || (e.keyCode == 27)) {
-                Line.editingObj.trigger('click').remove();
-            }
+    var onClick = function(e) {
+        // If some other handler is already handling clicks, ignore.
+        if (overlay.data('editing')) {
+            return;
+        }
+        // Click on overlay to create a new object.
+        if (overlay.is(e.target)) {
+            Plugins[$('.active', menu).data('plugin')].create(e, overlay);
+        }
+        // CLick on an existing object to edit it
+        else {
+            Plugins[$(e.target).data('plugin')].update(e, overlay);
         }
     };
-
-    // Class used to draw Lines
-    var Rect = {
-        onEdit: function(e) {
-            if (!Rect.editing) {
-                var x = e.pageX,
-                    y = e.pageY;
-
-                // Create a new rect if we didn't click on one.
-                // Else, use the existing line.
-                if ($(e.target).is('line')) {
-                    Rect.editingObj = $(e.target);
-                } else {
-                    Rect.editingObj = $$('rect', {
-                        'x': x,
-                        'y': y,
-                        'width': 0,
-                        'height': 0
-                    });
-                    overlay.append(Rect.editingObj);
-                }
-
-                Rect.editing = 1;
-
-                // Set the class stating that we're editing, and bind events
-                Rect.editingObj.attr('class', 'editing');
-                $('html').on('mousemove', Rect.onMoveWhenEditing)
-                         .on('keyup', Rect.onKeyWhenEditing);
-            } else {
-                // To end editing, unbind events, and reset stuff
-                $('html').off('mousemove', Rect.onMoveWhenEditing)
-                         .off('keyup', Rect.onKeyWhenEditing);
-                Rect.editing = 0;
-                Rect.editingObj.removeAttr('class');
-            }
-
-            // We don't want this to go to anything behind the line or overlay.
-            e.stopPropagation();
-        },
-
-        // Just move the appropriate end of the line as we move the mouse.
-        onMoveWhenEditing: function(e) {
-            var attrs = {};
-            attrs['width']  = Math.max(0, e.pageX - Rect.editingObj.attr('x'));
-            attrs['height'] = Math.max(0, e.pageY - Rect.editingObj.attr('y'));
-            $(Rect.editingObj).attr(attrs);
-        }
-    };
-
-    // Class used to draw Textboxes
-    var Text = {
-        onEdit: function(e) {
-            // If we are NOT already editing a textbox
-            if (!Text.editing) {
-                var x = e.pageX,
-                    y = e.pageY;
-
-                // Create a new textbox if we didn't click on one.
-                if (overlay.is(e.target)) {
-                    Text.editingText = $$('foreignObject', {x:x, y:y, width:200, height:60})
-                        .append($('<textarea>').css({width:'200px', height:'60px'}));
-                    overlay.append(Text.editingText);
-                }
-            }
-        }
-    };
-
-    $('a.line', menu).on('click', function(e) {
-        overlay.off('click');
-        overlay.on('click', Line.onEdit);
-    });
-
-    $('a.text', menu).on('click', function(e) {
-        overlay.off('click');
-        overlay.on('click', Text.onEdit);
-    });
-
-    $('a.rect', menu).on('click', function(e) {
-        overlay.off('click');
-        overlay.on('click', Rect.onEdit);
-    });
+    overlay.on('click', onClick);
 }
+
+Plugins.Rect = {
+    create: function(e, overlay) {
+        var obj = $$('rect', {x: e.pageX, y:e.pageY, width:100, height: 100});
+        obj.data('plugin', 'Rect')
+            .appendTo(overlay)
+            .trigger('click');
+    },
+    update: function(e, overlay) {
+        var $target = $(e.target);
+        var x = $target.attr('x');
+        var y = $target.attr('y');
+        overlay.data('editing', true)
+          .on('mousemove.Rect', function(e) {
+            var w = e.pageX - x;
+            var h = e.pageY - y;
+            // In case the cursor goes beyond the top / left, use transforms.
+            var t = '';
+            if (w < 0) { w = -w; t += 'scale(-1 1) translate(-' + 2*x + ' 0) '; }
+            if (h < 0) { h = -h; t += 'scale(1 -1) translate(0 -' + 2*y + ') '; }
+            $target.attr({width: w, height: h, transform: t});
+          }).on('click.Rect', function(e) {
+            overlay.data('editing', false).off('.Rect');
+            $('html').off('.Rect');
+          });
+        $('html').on('keyup.Rect', function(e) {
+            if ((e.keyCode == 46) || (e.keyCode == 27)) {
+                overlay.trigger('click');
+                $target.remove();
+            }
+        });
+    }
+};
+
+Plugins.Line = {
+    create: function(e, overlay) {
+        var obj = $$('line', {x1: e.pageX, y1:e.pageY, x2:e.pageX, y2: e.pageY});
+        obj.data('plugin', 'Line')
+            .appendTo(overlay)
+            .trigger('click');
+    },
+    update: function(e, overlay) {
+        var $target = $(e.target);
+        overlay.data('editing', true)
+          .on('mousemove.Line', function(e) {
+            $target.attr({x2: e.pageX, y2: e.pageY});
+          }).on('click.Line', function(e) {
+            overlay.data('editing', false).off('.Line');
+            $('html').off('.Line');
+          });
+        $('html').on('keyup.Line', function(e) {
+            if ((e.keyCode == 46) || (e.keyCode == 27)) {
+                overlay.trigger('click');
+                $target.remove();
+            }
+        });
+    }
+};
+
 
 })(window);
