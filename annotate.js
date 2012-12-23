@@ -145,7 +145,7 @@ function init(files) {
 
 Plugins.Rect = {
     create: function(e, overlay) {
-        var obj = $$('rect', {x: e.pageX, y:e.pageY, width:100, height: 100});
+        var obj = $$('rect', {x: e.pageX, y:e.pageY, rx:10, ry:10, width:100, height: 100});
         obj.data('plugin', 'Rect')
             .appendTo(overlay)
             .trigger('click');
