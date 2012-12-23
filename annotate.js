@@ -35,14 +35,14 @@ html.annogram .overlay {
 
 html.drawing .overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
 html.drawing div.overlay { pointer-events: none; }
-html.drawing div.overlay textarea { pointer-events: auto; }
+html.drawing div.overlay .editable { pointer-events: auto; }
 html.drawing .overlay * { cursor: auto; }
 html.drawing .overlay line { stroke: rgba(0,0,0,.8); stroke-width: 1.5; }
 html.drawing .overlay rect { fill: rgba(0,0,0,.01); stroke: #000; }
-html.drawing .overlay textarea { background-color: #ffa; border:1px solid #fea; position: absolute; }
+html.drawing .overlay .editable { position: absolute; }
 html.drawing .overlay line:hover,
 html.drawing .overlay rect:hover { stroke: red; stroke-width: 4; }
-html.drawing .overlay textarea:hover { border: 4px solid red; }
+html.drawing .overlay .editable:hover { border: 4px solid red; background-color: #ffa; }
 <<< style.css
 
 >>> menu.html
@@ -203,7 +203,10 @@ Plugins.Line = {
 
 Plugins.Text = {
     create: function(e, overlay) {
-        var obj = $('<textarea>').css({left: e.pageX, top: e.pageY});
+        var obj = $('<div>')
+            .attr('contentEditable', 'true')
+            .addClass('editable')
+            .css({left: e.pageX, top: e.pageY, width: '20em', minHeight: '2em'});
         obj.data('plugin', 'Text')
             .appendTo(overlay.next())
             .on('keyup', function(e) {
