@@ -25,6 +25,16 @@ html.annogram .menu {
     z-index: 99999;
 }
 
+html.annogram .palette a {
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    border: 1px solid #888;
+    border-width: 0 1px 1px 0;
+}
+html.annogram .palette a:hover  { border-width: 1px 0 0 1px; text-decoration: none; }
+html.annogram .palette a.active { border-width: 2px 0 0 2px; }
+
 html.annogram .overlay {
     position: absolute;
     width: 100%;
@@ -37,16 +47,23 @@ html.drawing .overlay { display: block; cursor: crosshair; background-color: rgb
 html.drawing div.overlay { pointer-events: none; }
 html.drawing div.overlay .editable { pointer-events: auto; }
 html.drawing .overlay * { cursor: auto; }
-html.drawing .overlay line { stroke: rgba(0,0,0,.8); stroke-width: 1.5; }
-html.drawing .overlay rect { fill: rgba(0,0,0,.01); stroke: #000; }
+html.drawing .overlay line { stroke-width: 1.5; }
+html.drawing .overlay rect { fill: rgba(0,0,0,.01); }
 html.drawing .overlay .editable { position: absolute; }
 html.drawing .overlay line:hover,
 html.drawing .overlay rect:hover { stroke: red; stroke-width: 4; }
-html.drawing .overlay .editable:hover { border: 4px solid red; background-color: #ffa; }
+html.drawing .overlay .editable:hover { border: 4px solid red; }
 <<< style.css
 
 >>> menu.html
 <div class="menu">
+ <span class="palette">
+   <a href="#" data-color="#4f81bd" class="active color">&#160;</a>
+   <a href="#" data-color="#c0504d" class="color">&#160;</a>
+   <a href="#" data-color="#9bbb59" class="color">&#160;</a>
+   <a href="#" data-color="#444444" class="color">&#160;</a>
+   <a href="#" data-color="#ffffff" class="color">&#160;</a>
+ </span>
  <span class="btn-group">
   <a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a>
   <a href="#" data-plugin="Rect" class="shape btn btn-primary btn-small">Rect</a>
@@ -101,11 +118,13 @@ function init(files) {
     $('<style>' + files['style.css'] + '</style>').appendTo('head');
 
     var menu = $(files['menu.html']).appendTo('body');
-    $('a.shape', menu).hide();
+    $('a.shape, .palette', menu).hide();
+
+    // When the draw button is clicked, show the shapes
     $('a.draw', menu).on('click', function(e) {
-        $(this).toggleClass('active');
-        $('a.shape', menu).toggle();
         e.preventDefault();
+        $(this).toggleClass('active');
+        $('a.shape, .palette', menu).toggle();
         $('html').toggleClass('drawing');
         // When we start drawing, click on the last shape
         if ($(this).is('.active')) {
@@ -117,6 +136,15 @@ function init(files) {
     $('a.shape', menu).on('click', function(e) {
         e.preventDefault();
         $('a.shape', menu).removeClass('active');
+        $(this).addClass('active');
+    });
+
+    // Set the palette colours. When clicked, make it active.
+    $('.palette a.color', menu).each(function() {
+        $(this).css('background-color', $(this).data('color'));
+    }).on('click', function(e) {
+        e.preventDefault();
+        $('.palette a.color', menu).removeClass('active');
         $(this).addClass('active');
     });
 
@@ -133,7 +161,7 @@ function init(files) {
         }
         // Click on overlay to create a new object.
         if (overlay.is(e.target)) {
-            Plugins[$('.active', menu).data('plugin')].create(e, overlay);
+            Plugins[$('.active.shape', menu).data('plugin')].create(e, overlay);
         }
         // CLick on an existing object to edit it
         else {
@@ -145,7 +173,15 @@ function init(files) {
 
 Plugins.Rect = {
     create: function(e, overlay) {
-        var obj = $$('rect', {x: e.pageX, y:e.pageY, rx:10, ry:10, width:100, height: 100});
+        var obj = $$('rect', {
+            x: e.pageX,
+            y:e.pageY,
+            rx:10,
+            ry:10,
+            width:100,
+            height: 100,
+            stroke: $('.color.active').data('color')
+        });
         obj.data('plugin', 'Rect')
             .appendTo(overlay)
             .trigger('click');
@@ -178,7 +214,13 @@ Plugins.Rect = {
 
 Plugins.Line = {
     create: function(e, overlay) {
-        var obj = $$('line', {x1: e.pageX, y1:e.pageY, x2:e.pageX, y2: e.pageY});
+        var obj = $$('line', {
+            x1: e.pageX,
+            y1: e.pageY,
+            x2: e.pageX,
+            y2: e.pageY,
+            stroke: $('.color.active').data('color')
+        });
         obj.data('plugin', 'Line')
             .appendTo(overlay)
             .trigger('click');
