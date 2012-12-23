@@ -37,7 +37,7 @@ html.drawing .overlay { display: block; cursor: crosshair; background-color: rgb
 html.drawing div.overlay { pointer-events: none; }
 html.drawing div.overlay textarea { pointer-events: auto; }
 html.drawing .overlay * { cursor: auto; }
-html.drawing .overlay line { stroke: rgba(0,0,0,.8); stroke-width: 3; }
+html.drawing .overlay line { stroke: rgba(0,0,0,.8); stroke-width: 1.5; }
 html.drawing .overlay rect { fill: rgba(0,0,0,.01); stroke: #000; }
 html.drawing .overlay textarea { background-color: #ffa; border:1px solid #fea; position: absolute; }
 html.drawing .overlay line:hover,
