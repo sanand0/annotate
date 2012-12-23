@@ -31,9 +31,10 @@ html.annogram .palette a {
     display: inline-block;
     border: 1px solid #888;
     border-width: 0 1px 1px 0;
+    opacity: .7;
 }
-html.annogram .palette a:hover  { border-width: 1px 0 0 1px; text-decoration: none; }
-html.annogram .palette a.active { border-width: 2px 0 0 2px; }
+html.annogram .palette a:hover  { border-width: 1px 0 0 1px; opacity: 1; text-decoration: none; }
+html.annogram .palette a.active { border-width: 1px 0 0 1px; opacity: 1; }
 
 html.annogram .overlay {
     position: absolute;
@@ -62,7 +63,6 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
    <a href="#" data-color="#c0504d" class="color">&#160;</a>
    <a href="#" data-color="#9bbb59" class="color">&#160;</a>
    <a href="#" data-color="#444444" class="color">&#160;</a>
-   <a href="#" data-color="#ffffff" class="color">&#160;</a>
  </span>
  <span class="btn-group">
   <a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a>
@@ -72,6 +72,20 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
  <a href="#" class="draw btn btn-primary btn-small">Annotate</a>
 </div>
 <<< menu.html
+
+>>> svg.html
+<svg class="overlay" xmlns="http://www.w3.org/2000/svg" width="100%" height="">
+  <defs>
+    <marker id="Triangle"
+      viewBox="0 0 10 10" refX="0" refY="5"
+      markerUnits="strokeWidth"
+      markerWidth="4" markerHeight="3"
+      orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(0,0,0,.5)"/>
+    </marker>
+  </defs>
+</svg>
+<<< svg.html
 
 **/
 
@@ -149,7 +163,7 @@ function init(files) {
     });
 
     // Create the overlay. This is the parent of all the SVG elements we'll draw.
-    var overlay = $$('svg').attr('class', 'overlay')
+    var overlay = $(files['svg.html'])
         .css('height', Math.max($(document).height(), 2000))
         .appendTo('body');
     $('<div class="overlay">').insertAfter(overlay);
@@ -219,7 +233,8 @@ Plugins.Line = {
             y1: e.pageY,
             x2: e.pageX,
             y2: e.pageY,
-            stroke: $('.color.active').data('color')
+            stroke: $('.color.active').data('color'),
+            'marker-end': 'url(#Triangle)'
         });
         obj.data('plugin', 'Line')
             .appendTo(overlay)
