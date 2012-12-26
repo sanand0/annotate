@@ -54,6 +54,10 @@ html.drawing .overlay .editable { position: absolute; }
 html.drawing .overlay line:hover,
 html.drawing .overlay rect:hover { stroke: red; stroke-width: 4; }
 html.drawing .overlay .editable:hover { border: 4px solid red; }
+@media print {
+    html.annogram .menu { display: none; }
+    html.drawing .overlay { background-color: rgba(0,0,0,0); }
+}
 <<< style.css
 
 >>> menu.html
