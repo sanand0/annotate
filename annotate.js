@@ -7,7 +7,13 @@ Javascript plugin to allow annotations on any page.
 To use it in your HTML file:
 
 1. Ensure that bootstrap.css and jquery.min.js are present
-2. Add <script class="annogram" src="annotate.js"></script> at the end
+2. Add <script class="annogram" src="annotate.js" data-selector=".mainbody"></script> at the end
+
+Parameters:
+- class="annogram" is required for the script to work
+- src="annotate.js" is the link to this script
+- data-selector=".mainbody" is an optional selector that annotations are positioned against.
+  If this container moves (e.g. if it's auto-centered), annotations move along with it.
 
 IMPORTANT:
 - The class=annogram should not be changed.
@@ -38,9 +44,9 @@ html.annogram .palette a.active { border-width: 1px 0 0 1px; opacity: 1; }
 
 html.annogram .overlay {
     position: absolute;
-    width: 100%;
     top: 0;
-    left: 0;
+    width: 6000px;
+    left: -2000px;
     display: none;
 }
 
@@ -167,9 +173,11 @@ function init(files) {
     });
 
     // Create the overlay. This is the parent of all the SVG elements we'll draw.
+    var $selector = $($('script.annogram').data('selector') || 'body')
+        .css('position', 'relative');
     var overlay = $(files['svg.html'])
         .css('height', Math.max($(document).height(), 2000))
-        .appendTo('body');
+        .appendTo($selector);
     $('<div class="overlay">').insertAfter(overlay);
 
     var onClick = function(e) {
