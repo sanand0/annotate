@@ -4,10 +4,10 @@ Javascript plugin to allow annotations on any page.
 - Works on IE9+, Chrome, Firefox, iPad. Zepto / jQuery required
 - Click the annotator to start drawing: line, rect or text
 
-To use it, add this line to the end of the HTML template:
+To use it in your HTML file:
 
-1. Ensure that bootstrap.css is presnt
-2. Add <script class="annogram" src="annotate.js"></script>
+1. Ensure that bootstrap.css and jquery.min.js are present
+2. Add <script class="annogram" src="annotate.js"></script> at the end
 
 IMPORTANT:
 - The class=annogram should not be changed.
@@ -93,7 +93,7 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
 
 **/
 
-(function(w, undefined) {
+$(function() {
 
 // Ensure that this module is loaded only once
 var UID = '.annogram';
@@ -279,4 +279,4 @@ Plugins.Text = {
 };
 
 
-})(window);
+});
