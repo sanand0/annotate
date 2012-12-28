@@ -192,8 +192,8 @@ function init(files) {
 Plugins.Rect = {
     create: function(e, overlay) {
         var obj = $$('rect', {
-            x: e.pageX,
-            y:e.pageY,
+            x: e.offsetX,
+            y:e.offsetY,
             rx:10,
             ry:10,
             width:100,
@@ -210,8 +210,8 @@ Plugins.Rect = {
         var y = $target.attr('y');
         overlay.data('editing', true)
           .on('mousemove.Rect', function(e) {
-            var w = e.pageX - x;
-            var h = e.pageY - y;
+            var w = e.offsetX - x;
+            var h = e.offsetY - y;
             // In case the cursor goes beyond the top / left, use transforms.
             var t = '';
             if (w < 0) { w = -w; t += 'scale(-1 1) translate(-' + 2*x + ' 0) '; }
@@ -233,10 +233,10 @@ Plugins.Rect = {
 Plugins.Line = {
     create: function(e, overlay) {
         var obj = $$('line', {
-            x1: e.pageX,
-            y1: e.pageY,
-            x2: e.pageX,
-            y2: e.pageY,
+            x1: e.offsetX,
+            y1: e.offsetY,
+            x2: e.offsetX,
+            y2: e.offsetY,
             stroke: $('.color.active').data('color'),
             'marker-end': 'url(#Triangle)'
         });
@@ -248,7 +248,7 @@ Plugins.Line = {
         var $target = $(e.target);
         overlay.data('editing', true)
           .on('mousemove.Line', function(e) {
-            $target.attr({x2: e.pageX, y2: e.pageY});
+            $target.attr({x2: e.offsetX, y2: e.offsetY});
           }).on('click.Line', function(e) {
             overlay.data('editing', false).off('.Line');
             $('html').off('.Line');
@@ -267,7 +267,7 @@ Plugins.Text = {
         var obj = $('<div>')
             .attr('contentEditable', 'true')
             .addClass('editable')
-            .css({left: e.pageX, top: e.pageY, width: '20em', minHeight: '2em'});
+            .css({left: e.offsetX, top: e.offsetY, width: '20em', minHeight: '2em'});
         obj.data('plugin', 'Text')
             .appendTo(overlay.next())
             .on('keyup', function(e) {
