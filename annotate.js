@@ -89,7 +89,7 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
     <marker id="Triangle"
       viewBox="0 0 10 10" refX="0" refY="5"
       markerUnits="strokeWidth"
-      markerWidth="4" markerHeight="3"
+      markerWidth="8" markerHeight="6"
       orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(0,0,0,.5)"/>
     </marker>
@@ -275,7 +275,9 @@ Plugins.Text = {
         var obj = $('<div>')
             .attr('contentEditable', 'true')
             .addClass('editable')
-            .css({left: e.offsetX, top: e.offsetY, width: '20em', minHeight: '2em'});
+            .css({left: e.offsetX, top: e.offsetY, width: '20em', minHeight: '2em', padding: '.2em .5em',
+                border: '1px solid ' + $('.color.active').data('color')
+            });
         obj.data('plugin', 'Text')
             .appendTo(overlay.next())
             .on('keyup', function(e) {
