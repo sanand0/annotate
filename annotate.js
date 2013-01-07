@@ -74,10 +74,10 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
 >>> menu.html
 <div class="menu">
  <span class="palette">
-   <a href="#" data-color="#4f81bd" class="active color">&#160;</a>
-   <a href="#" data-color="#c0504d" class="color">&#160;</a>
-   <a href="#" data-color="#9bbb59" class="color">&#160;</a>
-   <a href="#" data-color="#444444" class="color">&#160;</a>
+   <a href="#" data-color="#4f81bd" data-bg="rgba( 79, 129, 189, 0.8)" class="active color">&#160;</a>
+   <a href="#" data-color="#c0504d" data-bg="rgba(192,  80,  77, 0.8)" class="color">&#160;</a>
+   <a href="#" data-color="#9bbb59" data-bg="rgba(155, 187,  89, 0.8)" class="color">&#160;</a>
+   <a href="#" data-color="#444444" data-bg="rgba( 68,  68,  68, 0.8)" class="color">&#160;</a>
  </span>
  <span class="btn-group">
   <a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a>
@@ -287,7 +287,9 @@ Plugins.Text = {
             .attr('contentEditable', 'true')
             .addClass('editable')
             .css({left: e.offsetX, top: e.offsetY, width: '20em', minHeight: '2em', padding: '.2em .5em',
-                border: '1px solid ' + $('.color.active').data('color')
+                // border: '1px solid ' + $('.color.active').data('color'),
+                color: '#fff',
+                background: $('.color.active').data('bg')
             });
         obj.data('plugin', 'Text')
             .appendTo(overlay.next())
