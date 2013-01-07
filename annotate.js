@@ -50,7 +50,12 @@ html.annogram .overlay {
     display: none;
 }
 
+html.annogram .shape, html.annogram .palette { display: none; }
+html.drawing .shape, html.drawing .palette { display: inline; }
+html.waiting .shape, html.waiting .palette { display: none; }
+
 html.drawing .overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
+html.waiting .overlay { cursor: auto; background-color: rgba(0,0,0,0); pointer-events: none; }
 html.drawing div.overlay { pointer-events: none; }
 html.drawing div.overlay .editable { pointer-events: auto; }
 html.drawing .overlay * { cursor: auto; }
@@ -77,7 +82,7 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
  <span class="btn-group">
   <a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a>
   <a href="#" data-plugin="Rect" class="shape btn btn-primary btn-small">Rect</a>
-  <a href="#" data-plugin="Line" class="shape btn btn-primary btn-small">Line</a>
+  <a href="#" data-plugin="Line" class="shape btn btn-primary btn-small active">Line</a>
  </span>
  <a href="#" class="draw btn btn-primary btn-small">Annotate</a>
 </div>
@@ -142,17 +147,23 @@ function init(files) {
     $('<style>' + files['style.css'] + '</style>').appendTo('head');
 
     var menu = $(files['menu.html']).appendTo('body');
-    $('a.shape, .palette', menu).hide();
 
-    // When the draw button is clicked, show the shapes
+    // When the 'Annotate' button is clicked, cycle between 3 states:
+    // 0. html.annogram: no annotations visible
+    // 1. html.annogram.drawing: annotations visible, user can draw
+    // 2. html.annogram.drawing.waiting: annotations visible, user cannot draw
     $('a.draw', menu).on('click', function(e) {
         e.preventDefault();
-        $(this).toggleClass('active');
-        $('a.shape, .palette', menu).toggle();
-        $('html').toggleClass('drawing');
-        // When we start drawing, click on the last shape
-        if ($(this).is('.active')) {
-            $('a.shape', menu).last().trigger('click');
+        var $html = $('html'), $this = $(this);
+        if ($html.is('.waiting')) {
+            $html.removeClass('drawing waiting');
+            $this.removeClass('active');
+        } else if ($html.is('.drawing')) {
+            $html.addClass('waiting');
+            $this.addClass('active');
+        } else {
+            $html.addClass('drawing');
+            $this.addClass('active');
         }
     });
 
@@ -287,6 +298,5 @@ Plugins.Text = {
             });
     }
 };
-
 
 });
