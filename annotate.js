@@ -55,7 +55,7 @@ html.drawing .shape, html.drawing .palette { display: inline; }
 html.waiting .shape, html.waiting .palette { display: none; }
 
 html.drawing .overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
-html.waiting .overlay { cursor: auto; background-color: rgba(0,0,0,0); pointer-events: none; }
+html.waiting .overlay { cursor: auto; background-color: none; pointer-events: none; }
 html.drawing div.overlay { pointer-events: none; }
 html.drawing div.overlay .editable { pointer-events: auto; }
 html.drawing .overlay * { cursor: auto; }
