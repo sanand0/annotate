@@ -46,7 +46,6 @@ html.annogram .overlay {
     position: absolute;
     top: 0;
     width: 6000px;
-    left: -2000px;
     display: none;
 }
 
@@ -55,7 +54,7 @@ html.drawing .shape, html.drawing .palette { display: inline; }
 html.waiting .shape, html.waiting .palette { display: none; }
 
 html.drawing .overlay { display: block; cursor: crosshair; background-color: rgba(0,0,0,.01); }
-html.waiting .overlay { cursor: auto; background-color: none; pointer-events: none; }
+html.waiting .overlay { cursor: auto; background-color: rgba(0,0,0,0); pointer-events: none; }
 html.drawing div.overlay { pointer-events: none; }
 html.drawing div.overlay .editable { pointer-events: auto; }
 html.drawing .overlay * { cursor: auto; }
@@ -80,16 +79,16 @@ html.drawing .overlay .editable:hover { border: 4px solid red; }
    <a href="#" data-color="#444444" data-bg="rgba( 68,  68,  68, 0.8)" class="color">&#160;</a>
  </span>
  <span class="btn-group">
-  <a href="#" data-plugin="Text" class="shape btn btn-primary btn-small">Text</a>
-  <a href="#" data-plugin="Rect" class="shape btn btn-primary btn-small">Rect</a>
-  <a href="#" data-plugin="Line" class="shape btn btn-primary btn-small active">Line</a>
+  <a href="#" data-plugin="Text" class="shape btn btn-small">Text</a>
+  <a href="#" data-plugin="Rect" class="shape btn btn-small">Rect</a>
+  <a href="#" data-plugin="Line" class="shape btn btn-small active">Line</a>
  </span>
- <a href="#" class="draw btn btn-primary btn-small">Annotate</a>
+ <a href="#" class="draw btn btn-small">Annotate</a>
 </div>
 <<< menu.html
 
 >>> svg.html
-<svg class="overlay" xmlns="http://www.w3.org/2000/svg" width="100%" height="">
+<svg class="overlay" xmlns="http://www.w3.org/2000/svg" width="100%" height="0">
   <defs>
     <marker id="Triangle"
       viewBox="0 0 10 10" refX="0" refY="5"
@@ -140,8 +139,21 @@ $.get($('script.annogram').attr('src'), function(text) {
     init(multipart(text));
 });
 
+
+
 // Annotation code starts here
 var Plugins = {};
+var $selector;
+var overlay_left = 2000;
+
+// Firefox fix :-(
+function normalize(e) {
+  if(!e.offsetX) {
+    e.offsetX = (e.pageX - $selector.offset().left + overlay_left);
+    e.offsetY = (e.pageY - $selector.offset().top);
+  }
+}
+
 function init(files) {
     // Add styles
     $('<style>' + files['style.css'] + '</style>').appendTo('head');
@@ -184,10 +196,13 @@ function init(files) {
     });
 
     // Create the overlay. This is the parent of all the SVG elements we'll draw.
-    var $selector = $($('script.annogram').data('selector') || 'body')
+    $selector = $($('script.annogram').data('selector') || 'body')
         .css('position', 'relative');
     var overlay = $(files['svg.html'])
-        .css('height', Math.max($(document).height(), 2000))
+        .css({
+            height: Math.max($(document).height(), 2000),
+            left: (-overlay_left) + 'px'
+        })
         .appendTo($selector);
     $('<div class="overlay">').insertAfter(overlay);
 
@@ -210,6 +225,7 @@ function init(files) {
 
 Plugins.Rect = {
     create: function(e, overlay) {
+        normalize(e);
         var obj = $$('rect', {
             x: e.offsetX,
             y:e.offsetY,
@@ -229,6 +245,7 @@ Plugins.Rect = {
         var y = $target.attr('y');
         overlay.data('editing', true)
           .on('mousemove.Rect', function(e) {
+            normalize(e);
             var w = e.offsetX - x;
             var h = e.offsetY - y;
             // In case the cursor goes beyond the top / left, use transforms.
@@ -251,6 +268,7 @@ Plugins.Rect = {
 
 Plugins.Line = {
     create: function(e, overlay) {
+        normalize(e);
         var obj = $$('line', {
             x1: e.offsetX,
             y1: e.offsetY,
@@ -267,6 +285,7 @@ Plugins.Line = {
         var $target = $(e.target);
         overlay.data('editing', true)
           .on('mousemove.Line', function(e) {
+            normalize(e);
             $target.attr({x2: e.offsetX, y2: e.offsetY});
           }).on('click.Line', function(e) {
             overlay.data('editing', false).off('.Line');
@@ -283,6 +302,7 @@ Plugins.Line = {
 
 Plugins.Text = {
     create: function(e, overlay) {
+        normalize(e);
         var obj = $('<div>')
             .attr('contentEditable', 'true')
             .addClass('editable')
